@@ -40,16 +40,97 @@ Router.route('/cloudmanager', {
 
 if (Meteor.isClient) {
 	Meteor.subscribe("clients");
+	var key_prefix = "clients:/MIICXAIBAAKBgQCTUQ49FJUCVvU5tIag/";
 	Template.home.helpers({
 	  username: function() {
 	    return Meteor.user().username;
 	  }
 	});
 	Template.robotgraph.onRendered(function() {
-			var nodes = new vis.DataSet(
+		var visnodes = Array();
+		var visedges = Array();
+		var robot_nodes = redisCollection.matching(
+			key_prefix + "*/receiving:name").fetch();
+		for (var i = 0; i < robot_nodes.length; i++)
+		{
+			var name = robot_nodes[i].value;
+			visnodes.push({
+          id: name,
+          label: name,
+          mass: 8,
+          group: name,
+          title: redisCollection.matching(key_prefix + name
+          	+ "/receiving:description").fetch()[0].value,
+      });
+			var topic_nodes = redisCollection.matching(
+				key_prefix + name + "/*:topic").fetch();
+			for (var j = 0; j < topic_nodes.length; j++)
+			{
+				if (topic_nodes[j].value.endsWith("description"))
+					continue;
+				visnodes.push({
+	          id: topic_nodes[j].value,
+	          label: topic_nodes[j].value,
+	          mass: 5,
+	          shape: 'box',
+	          shapeProperties: {
+          		borderRadius: 3
+	          },
+	          group: name,
+	          title: redisCollection.matching(key_prefix + topic_nodes[j].value.substring(1)
+	          	+ ":type").fetch()[0].value,
+	      });
+	      visedges.push({
+            id: name + " " + topic_nodes[j].value,
+            from: name,
+            to: topic_nodes[j].value,
+            arrows: {
+                to: {
+                    enabled: true,
+                    scaleFactor: 0.8,
+                }
+            },
+            font: {
+                align: "top",
+            },
+            label: parseFloat(redisCollection.matching(key_prefix + topic_nodes[j].value.substring(1)
+	          	+ ":freq").fetch()[0].value).toFixed(2) + " Hz",
+            group: name,
+         });
+				var rcv_nodes = redisCollection.matching(key_prefix + topic_nodes[j].value.substring(1)
+					+ ":to").fetch();
+				if (rcv_nodes.length == 1)
+				{
+					receivers = rcv_nodes[0].value.split(" ");
+					for (var k = 0; k < receivers.length; k++)
+					{
+			      visedges.push({
+		            id: topic_nodes[j].value + " " + receivers[k],
+		            from: topic_nodes[j].value,
+		            to: receivers[k],
+		            arrows: {
+		                to: {
+		                    enabled: true,
+		                    scaleFactor: 0.8,
+		                }
+		            },
+		            font: {
+		                align: "top",
+		            },
+		            label: parseFloat(redisCollection.matching(key_prefix + receivers[k]
+			          	+ "/receiving:freq:" + topic_nodes[j].value).fetch()[0].value).toFixed(2) + " Hz",
+		            group: receivers[k],
+		         });
+					}
+				}
+			}
+		}
+		var nodes = new vis.DataSet(
+				visnodes
 		);
 
 		var edges = new vis.DataSet(
+			visedges
 		);
 
 		var container = document.getElementById('graph');
@@ -62,7 +143,6 @@ if (Meteor.isClient) {
 
 		var network = new vis.Network(container, data, options);
 		function updateEdges() {
-		console.log(redisCollection.matching("clients:/MIICXAIBAAKBgQCTUQ49FJUCVvU5tIag/*").fetch());
 			$.ajax({
 				url: 'http://localhost:50000/graph/MIICXAIBAAKBgQCTUQ49FJUCVvU5tIag/updateedges',
 				dataType: 'json',
