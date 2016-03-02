@@ -1,47 +1,95 @@
 <head>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.js"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css" rel="stylesheet" type="text/css" />
 	<title>ROSCloud Dashboard</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body>
-	<h1>ROSCloud Dashboard</h1>
-	{{> navigation}}
 </body>
-<template name="navigation">
-	<ul>
-		<li><a href="{{pathFor route='home'}}">Home</a></li>
-	    {{#if currentUser}}
-	        <li><a href="#" class="logout">Logout</a></li>
-			<li><a href="{{pathFor route='robotgraph'}}">Robot Graph</a></li>
-			<li><a href="{{pathFor route='cloudmanager'}}">Cloud Manager</a></li>
-	    {{else}}
-	        <li><a href="{{pathFor route='register'}}">Register</a></li>
-	        <li><a href="{{pathFor route='login'}}">Login</a></li>
-	    {{/if}}
-	</ul>
+<template name="main">
+	<div class="ui bottom attached grey inverted segment" style="padding: 0; margin-top: 0">
+	<div id="headerwrap">
+	<div class="ui grey inverted menu">
+		<h4 class="ui header item" style="padding: 20px 10px">ROSCloud Dashboard</h4>
+		<div class="ui right dropdown item">
+			<div class="ui icon"><i class="user icon"></i> {{username}}</div>
+			<i class="dropdown icon"></i>
+			<div class="inverted menu">
+			<a href="#" class="logout item">Logout</a>
+			</div>
+		</div>
+		</div>
+	</div>
+	</div>
+	<div id="content" class="ui container">
+		<div class="ui top attached tabular large menu">
+			<a href="{{pathFor route='home'}}" class="{{ activeIfTemplateIs 'home' }} item">Overview</a>
+				<a href="{{pathFor route='robotgraph'}}" class="{{ activeIfTemplateIs 'robotgraph' }} item">Robot Graph</a>
+				<a href="{{pathFor route='cloudmanager'}}" class="{{ activeIfTemplateIs 'cloudmanager' }} item">Cloud Manager</a>
+		</div>
+		<div class="ui bottom attached segment">
+		{{> yield}}
+		</div>
+	</div>
+</template>
+<template name="outside">
+	<div id="content" class="ui container">
+	{{> yield}}
+	</div>
 </template>
 <template name="home">
-	{{#if currentUser}}
 	<p>Welcome, {{username}}!</p>
-	{{else}}
-	<p>Welcome to ROSCloud! Please login or register.</p>
-	{{/if}}
 </template>
 <template name="register">
-	<h2>Register a New Group</h2>
-	<form class="register">
-		<p>Group Name: <input type="text" name="group"></p>
-		<p>Email: <input type="email" name="email"></p>
-		<p>Password: <input type="password" name="password"></p>
-		<p><input type="submit" value="Register"></p>
-	</form>
+	<div id="content">
+	<div class="ui middle aligned grid child">
+    <div class="column">
+        <div class="ui center aligned page grid">
+            <div class="eight wide  column">
+                <div class="ui left aligned segment">
+                    <h4 class="ui dividing header">Register <span style="color: #bbb">// <a href="{{pathFor route='login'}}">Login</a></span></h4>
+                    <div class="ui form">
+					    <form class="register">
+					        <div class="field">Group Name: 
+                            <div class="ui icon input"><input type="text" name="group" required> <i class="user icon"></i></div></div>
+					        <div class="field">Email: 
+                            <div class="ui icon input"><input type="text" name="group" required> <i class="mail icon"></i></div></div>
+					        <div class="field">Password: 
+                            <div class="ui icon input"><input type="password" name="password" required> <i class="lock icon"></i></div></div>
+					        <input type="submit" value="Register" class="ui primary button">
+					    </form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+    </div>
 </template>
 <template name="login">
-	<h2>Login</h2>
-    <form class="login">
-        <p>Group Name: <input type="text" name="group" required></p>
-        <p>Password: <input type="password" name="password" required></p>
-        <p><input type="submit" value="Login"></p>
-    </form>
+	<div id="content">
+	<div class="ui middle aligned grid child">
+    <div class="column">
+        <div class="ui center aligned page grid">
+            <div class="eight wide  column">
+                <div class="ui left aligned segment">
+                    <h4 class="ui dividing header">Login <span style="color: #bbb">// <a href="{{pathFor route='register'}}">Register</a></span></h4>
+                    <div class="ui form">
+					    <form class="login">
+					        <div class="field">Group Name: 
+                            <div class="ui icon input"><input type="text" name="group" required> <i class="user icon"></i></div></div>
+					        <div class="field">Password: 
+                            <div class="ui icon input"><input type="password" name="password" required> <i class="lock icon"></i></div></div>
+					        <input type="submit" value="Login" class="ui primary button">
+					    </form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+    </div>
 </template>
 <template name="robotgraph">
 	<h2>Robot Graph</h2>

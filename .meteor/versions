@@ -26,6 +26,7 @@ ejson@1.0.7
 email@1.0.8
 es5-shim@4.1.14
 fastclick@1.0.7
+flemay:less-autoprefixer@1.2.0
 geojson-utils@1.0.4
 hot-code-push@1.0.0
 html-tools@1.0.5
@@ -41,7 +42,6 @@ iron:location@1.0.11
 iron:middleware-stack@1.0.11
 iron:router@1.0.12
 iron:url@1.0.11
-jorisbontje:vis@3.11.0
 jquery@1.11.4
 json@1.0.3
 launch-screen@1.0.4
@@ -69,6 +69,12 @@ reactive-var@1.0.6
 reload@1.1.4
 retry@1.0.4
 routepolicy@1.0.6
+semantic:ui@2.1.8
+semantic:ui-css@2.1.2
+semantic:ui-data@2.1.8
+semantic:ui-dropdown@2.1.7
+semantic:ui-menu@2.1.7
+semantic:ui-site@2.1.7
 service-configuration@1.0.5
 session@1.1.1
 sha@1.0.4

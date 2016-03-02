@@ -3,3 +3,28 @@
 	width: 800px;
 	height: 400px;
 }
+body {
+  	margin: 0;
+}
+#content {
+	width: 900px;
+	margin: 0 auto;
+	margin-top: 0;
+}
+#headerwrap {
+	width: 900px;
+	margin: 0 auto;
+}
+#accounts {
+	float: right;
+}
+#login {
+	text-align: center;
+}
+.child {
+	position: relative;
+	top: 50%;
+	-webkit-transform: translateY(50%);
+	-ms-transform: translateY(50%);
+	transform: translateY(50%);
+}

@@ -22,6 +22,12 @@ iron:router
 accounts-password
 themeteorchef:jquery-validation
 ssadams:visjs
-jorisbontje:vis
 mrt:redis
 slava:miniredis
+semantic:ui
+flemay:less-autoprefixer
+semantic:ui-css
+semantic:ui-dropdown
+semantic:ui-data
+semantic:ui-menu
+semantic:ui-site
