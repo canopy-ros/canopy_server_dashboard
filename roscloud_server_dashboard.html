@@ -1,7 +1,7 @@
 <head>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.js"></script>
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css" rel="stylesheet" type="text/css" />
-	<title>ROSCloud Dashboard</title>
+	<title>Canopy Dashboard</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" sizes="16x16 32x32 96x96" href="/favicon.ico?v=2">
 </head>
@@ -9,29 +9,31 @@
 <body>
 </body>
 <template name="main">
-	<div class="ui bottom attached grey inverted segment" style="padding: 0; margin-top: 0">
+	<div class="ui bottom attached grey inverted segment" style="padding: 0; padding-bottom: 5px; margin-top: 0; margin-bottom: 25px; border-radius: 0">
 	<div id="headerwrap">
-	<div class="ui grey inverted menu">
-		<h4 class="ui header item" style="padding: 20px 10px">ROSCloud Dashboard</h4>
+	<div class="ui grey inverted menu" style="margin-bottom: 0">
+		<h2 class="ui header item" style="padding: 10px 10px">
+  		<img class="ui image" src="/logo.png" style="height: 1.5em; width: auto">
+  		</h2>
 		<div class="ui right dropdown item">
 			<div class="ui icon"><i class="user icon"></i> {{username}}</div>
 			<i class="dropdown icon"></i>
 			<div class="inverted menu">
-			<a href="#" class="logout item">Logout</a>
+			<a href="{{pathFor route='settings'}}" class="item"><i class="settings icon"></i> Settings</a>
+			<a href="#" class="logout item"><i class="sign out icon"></i> Logout</a>
 			</div>
 		</div>
-		</div>
+	</div>
+	<div class="ui divider" style="margin: 0"></div>
+	<div class="ui attached large secondary inverted pointing menu">
+		<a href="{{pathFor route='home'}}" class="{{ activeIfTemplateIs 'home' }} item"><i class="home icon"></i>Overview</a>
+			<a href="{{pathFor route='robots'}}" class="{{ activeIfTemplateIs 'robots' }} item"><i class="dashboard icon"></i>Robots</a>
+			<a href="{{pathFor route='containers'}}" class="{{ activeIfTemplateIs 'containers' }} item"><i class="cloud icon"></i>Containers</a>
+	</div>
 	</div>
 	</div>
 	<div id="content" class="ui container">
-		<div class="ui top attached tabular large menu">
-			<a href="{{pathFor route='home'}}" class="{{ activeIfTemplateIs 'home' }} item">Overview</a>
-				<a href="{{pathFor route='robotgraph'}}" class="{{ activeIfTemplateIs 'robotgraph' }} item">Robot Graph</a>
-				<a href="{{pathFor route='cloudmanager'}}" class="{{ activeIfTemplateIs 'cloudmanager' }} item">Cloud Manager</a>
-		</div>
-		<div class="ui bottom attached segment">
 		{{> yield}}
-		</div>
 	</div>
 </template>
 <template name="outside">
@@ -40,7 +42,93 @@
 	</div>
 </template>
 <template name="home">
-	<p>Welcome, {{username}}!</p>
+	<div class="ui positive message" style="margin-top: -10px">
+	  <i class="close icon"></i>
+	  <div class="header">
+	    Welcome!
+	  </div>
+	  <p>Your private key is {{user_id}}. Use this key in your launch files to identify your robots as part of this group. You can view your private key any time in your user settings.</p>
+	</div>
+	<div class="ui grid">
+		<div class="eight wide column">
+		<div class="ui teal segment">
+		<div class="ui tiny header"><i class="users icon"></i>Connected Robots</div>
+		<p>No connections.</p>
+		</div>
+		</div>
+		<div class="eight wide column">
+		<div class="ui green segment">
+		<div class="ui tiny header"><i class="book icon"></i>Connection Log</div>
+		<p>Nothing to show.</p>
+		</div>
+		</div>
+		<div class="six wide column">
+		<div class="ui olive segment">
+		<div class="ui tiny header"><i class="cloud icon"></i>Container Statuses</div>
+		<p>Nothing to show.</p>
+		</div>
+		</div>
+		<div class="ten wide column">
+		<div class="ui blue segment">
+		<div class="ui tiny header"><i class="info circle icon"></i>Messages</div>
+		<p>Nothing to show.</p>
+		</div>
+		</div>
+	</div>
+</template>
+<template name="robots">
+	<div class="ui grid">
+	<div class="sixteen wide column">
+	<div class="ui teal segment">
+	<div class="ui tiny header"><i class="sitemap icon"></i>Robot Network</div>
+	<div id="graph"></div>
+	</div>
+	</div>
+	</div>
+</template>
+<template name="containers">
+	<div class="ui grid">
+	<div class="eight wide column">
+	<div class="ui green segment">
+	<div class="ui tiny header"><i class="setting icon"></i>Container Statuses</div>
+	<p>Nothing to show.</p>
+	</div>
+	</div>
+	<div class="eight wide column">
+	<div class="ui teal segment">
+	<div class="ui tiny header"><i class="browser icon"></i>Running Processes</div>
+	<p>Nothing to show.</p>
+	</div>
+	</div>
+	<div class="four wide column">
+	<div class="ui blue segment">
+	<div class="ui tiny header"><i class="dashboard icon"></i>Controls</div>
+	<div class="ui vertical basic buttons">
+	  <button class="ui labeled icon button">
+	    <i class="icon"></i><i class="loading circle notched icon" style="background: none"></i>Start Container
+	  </button>
+	  <button class="ui labeled icon disabled button">
+	    <i class="repeat icon"></i>Restart Container
+	  </button>
+	  <button class="ui labeled icon disabled button">
+	    <i class="pause icon"></i>Pause Container
+	  </button>
+	</div>
+	</div>
+	</div>
+	<div class="twelve wide column">
+	<div class="ui olive segment">
+	<div class="ui tiny header"><i class="code icon"></i>Code Configuration</div>
+	<p>Not available yet.</p>
+	</div>
+	</div>
+	</div>
+</template>
+<template name="settings">
+	<div class="ui segment">
+	<h2>Settings</h2>
+	<div class="text">{{user_id}}</div>
+	</div>
 </template>
 <template name="register">
 	<div id="content">
@@ -49,7 +137,7 @@
         <div class="ui center aligned page grid">
             <div class="eight wide  column">
                 <div class="ui left aligned segment">
-                    <h4 class="ui dividing header">Register <span style="color: #bbb">// <a href="{{pathFor route='login'}}">Login</a></span></h4>
+                    <h3 class="ui dividing header">Register <span style="color: #bbb">// <a href="{{pathFor route='login'}}">Login</a></span></h3>
                     <div class="ui form">
 					    <form class="register">
 					        <div class="field">Group Name: 
@@ -58,7 +146,7 @@
                             <div class="ui icon input"><input type="text" name="group" required> <i class="mail icon"></i></div></div>
 					        <div class="field">Password: 
                             <div class="ui icon input"><input type="password" name="password" required> <i class="lock icon"></i></div></div>
-					        <input type="submit" value="Register" class="ui primary button">
+					        <button type="submit" class="ui inverted green button">Register</button>
 					    </form>
 					</div>
 				</div>
@@ -75,14 +163,14 @@
         <div class="ui center aligned page grid">
             <div class="eight wide  column">
                 <div class="ui left aligned segment">
-                    <h4 class="ui dividing header">Login <span style="color: #bbb">// <a href="{{pathFor route='register'}}">Register</a></span></h4>
+                    <h3 class="ui dividing header">Login <span style="color: #bbb">// <a href="{{pathFor route='register'}}">Register</a></span></h3>
                     <div class="ui form">
 					    <form class="login">
 					        <div class="field">Group Name: 
                             <div class="ui icon input"><input type="text" name="group" required> <i class="user icon"></i></div></div>
 					        <div class="field">Password: 
                             <div class="ui icon input"><input type="password" name="password" required> <i class="lock icon"></i></div></div>
-					        <input type="submit" value="Login" class="ui primary button">
+					        <button type="submit" class="ui inverted green button">Login</button>
 					    </form>
 					</div>
 				</div>
@@ -91,11 +179,4 @@
 	</div>
 	</div>
     </div>
-</template>
-<template name="robotgraph">
-	<h2>Robot Graph</h2>
-	<div id="graph"></div>
-</template>
-<template name="cloudmanager">
-	<h2>Cloud Manager</h2>
 </template>

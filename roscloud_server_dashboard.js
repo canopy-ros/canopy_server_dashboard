@@ -28,9 +28,9 @@ Router.route("/login", {
   name: 'login',
   layoutTemplate: 'outside'
 });
-Router.route('/robotgraph', {
-    name: 'robotgraph',
-    template: 'robotgraph',
+Router.route('/robots', {
+    name: 'robots',
+    template: 'robots',
     data: function(){
         var currentUser = Meteor.userId();
         return currentUser;
@@ -44,9 +44,25 @@ Router.route('/robotgraph', {
         }
     }
 });
-Router.route('/cloudmanager', {
-    name: 'cloudmanager',
-    template: 'cloudmanager',
+Router.route('/containers', {
+    name: 'containers',
+    template: 'containers',
+    data: function(){
+        var currentUser = Meteor.userId();
+        return currentUser;
+    },
+    onBeforeAction: function() {
+        var currentUser = Meteor.userId();
+        if (currentUser) {
+            this.next();
+        } else {
+            Router.go("login");
+        }
+    }
+});
+Router.route('/settings', {
+    name: 'settings',
+    template: 'settings',
     data: function(){
         var currentUser = Meteor.userId();
         return currentUser;
@@ -67,6 +83,9 @@ if (Meteor.isClient) {
 	Template.home.helpers({
 	  username: function() {
 	    return Meteor.user().username;
+	  },
+	  user_id: function() {
+	  	return Meteor.userId();
 	  }
 	});
   Template.main.events({
@@ -77,22 +96,42 @@ if (Meteor.isClient) {
     }
   });
   Template.main.helpers({
-    activeIfTemplateIs: function (template) {
-      var currentRoute = Router.current();
-      return currentRoute &&
-        template === currentRoute.lookupTemplate() ? 'active' : '';
-    },
+		activeIfTemplateIs: function (template) {
+		  var currentRoute = Router.current();
+		  return currentRoute &&
+		    template === currentRoute.lookupTemplate() ? 'active' : '';
+		},
 	  username: function() {
 	    return Meteor.user().username;
+	  },
+	  user_id: function() {
+	  	return Meteor.userId();
 	  }
   });
   Template.main.onRendered(function(){
 		$('.ui.dropdown')
 		  .dropdown({
-		    action: 'select'
+		    action: 'hide'
 		  });
   });
-	Template.robotgraph.onRendered(function() {
+  Template.home.onRendered(function() {
+		$('.message .close')
+		  .on('click', function() {
+		    $(this)
+		      .closest('.message')
+		      .transition('fade')
+		    ;
+		  });
+  });
+  Template.settings.helpers({
+  	username: function() {
+  		return Meteor.user().username;
+  	},
+  	user_id: function() {
+  		return Meteor.userId();
+  	}
+  });
+	Template.robots.onRendered(function() {
 		var visnodes = Array();
 		var visedges = Array();
 		var nodeMap = {};

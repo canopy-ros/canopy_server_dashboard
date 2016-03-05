@@ -1,6 +1,6 @@
 
 #graph {
-	width: 800px;
+	width: 100%;
 	height: 400px;
 }
 body {
@@ -27,4 +27,19 @@ body {
 	-webkit-transform: translateY(50%);
 	-ms-transform: translateY(50%);
 	transform: translateY(50%);
+}
+.ui.tiny.header {
+	color: #889990;
+	font-size: 1em;
+	text-transform: uppercase;
+	font-weight: bold;
+	margin-top: 3px;
+}
+
+.ui.tiny.header .icon {
+	font-size: 1.4em;
+}
+
+.ui.green.button {
+
 }
