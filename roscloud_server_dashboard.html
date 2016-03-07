@@ -28,7 +28,7 @@
 	<div class="ui attached large secondary inverted pointing menu">
 		<a href="{{pathFor route='home'}}" class="{{ activeIfTemplateIs 'home' }} item"><i class="home icon"></i>Overview</a>
 			<a href="{{pathFor route='robots'}}" class="{{ activeIfTemplateIs 'robots' }} item"><i class="dashboard icon"></i>Robots</a>
-			<a href="{{pathFor route='containers'}}" class="{{ activeIfTemplateIs 'containers' }} item"><i class="cloud icon"></i>Containers</a>
+			<a href="{{pathFor route='containers'}}" class="{{ activeIfTemplateIs 'containers' }}{{ activeIfTemplateIs 'container' }} item"><i class="cloud icon"></i>Containers</a>
 	</div>
 	</div>
 	</div>
@@ -62,16 +62,37 @@
 		<p>Nothing to show.</p>
 		</div>
 		</div>
+		<div class="stretched row">
 		<div class="six wide column">
 		<div class="ui olive segment">
 		<div class="ui tiny header"><i class="cloud icon"></i>Container Statuses</div>
-		<p>Nothing to show.</p>
+		<div class="ui relaxed divided list">
+		{{#each containerList}}
+			<div class="item">
+			<i class="power middle aligned icon"></i>
+			<div class="content">
+			<a href="{{pathFor route='container'}}">{{name}}</a>: {{status}}
+			</div>
+			</div>
+   		{{/each}}
+   		</div>
 		</div>
 		</div>
 		<div class="ten wide column">
 		<div class="ui blue segment">
 		<div class="ui tiny header"><i class="info circle icon"></i>Messages</div>
-		<p>Nothing to show.</p>
+		<div class="ui relaxed divided list">
+		{{#each messageList}}
+		<div class="item">
+		<i class="large {{messageIcon item}} middle aligned icon"></i>
+	    <div class="content">
+	      <div class="header">{{formatMessageItem item}} - {{value}}</div>
+	      <div class="description">{{stamp}}</div>
+	    </div>
+	    </div>
+	    {{/each}}
+		</div>
+		</div>
 		</div>
 		</div>
 	</div>
@@ -88,39 +109,224 @@
 </template>
 <template name="containers">
 	<div class="ui grid">
-	<div class="eight wide column">
+	<div class="sixteen wide column">
 	<div class="ui green segment">
-	<div class="ui tiny header"><i class="setting icon"></i>Container Statuses</div>
-	<p>Nothing to show.</p>
+	<div class="ui tiny header"><i class="list icon"></i>Container List</div>
+	<table class="ui celled table">
+	<thead>
+    <tr>
+      <th>Name</th>
+      <th>Status</th>
+      <th>Created On</th>
+      <th>Actions</th>
+    </tr>
+  	</thead>
+  	<tbody>
+    {{#if Template.subscriptionsReady}}
+	{{#each containerList}}
+	<tr>
+        <td>{{name}}</td>
+        <td>{{status}}</td>
+        <td>{{formatDate createdAt}}</td>
+        <td><a href="{{pathFor route='container'}}">Configure</a> | <a href="#" class="deleteContainer" style="color: #f00">Delete</a></td>
+    </tr>
+    {{/each}}
+    {{else}}
+    <tr><td>Loading...</td></tr>
+    {{/if}}
+    </tbody>
+    </table>
+    <div class="ui form">
+    <form>
+		<div class="field">
+        <div class="ui left action input"><button class="ui button" type="submit">New Container</button><input type="text" placeholder="Container Name" name="containerName"></div>
+        </div>
+    </form>
+    </div>
+	</div>
+	</div>
+	</div>
+</template>
+<template name="container">
+	<div class="ui grid">
+  	<div class="stretched row">
+		<div class="four wide column">
+		<div class="ui teal segment">
+		<div class="ui tiny header"><i class="dashboard icon"></i>Controls</div>
+		<div class="ui vertical basic buttons">
+		  <button class="ui labeled icon start button">
+		    <i class="power icon"></i><!--<i class="loading spinner icon" style="background: none"></i>-->{{startButtonText}}
+		  </button>
+		  <button class="ui labeled icon {{controlButtonDisabled}} button">
+		    <i class="repeat icon"></i>Restart Container
+		  </button>
+		  <button class="ui labeled icon {{controlButtonDisabled}} button">
+		    <i class="pause icon"></i>Pause Container
+		  </button>
+		</div>
+		</div>
+		</div>
+		<div class="six wide column">
+		<div class="ui green segment">
+		<div class="ui tiny header"><i class="setting icon"></i>Container Status</div>
+		<div class="ui relaxed divided list">
+			<div class="item">
+			<i class="tag middle aligned icon"></i>
+			<div class="content">
+			  Name: {{name}}
+			</div>
+			</div>
+			<div class="item">
+			<i class="power middle aligned icon"></i>
+			<div class="content">
+			  Status: {{status}}
+			</div>
+			</div>
+			<div class="item">
+			<i class="heartbeat middle aligned icon"></i>
+			<div class="content">
+			  CPU Usage: 0%
+			</div>
+			</div>
+			<div class="item">
+			<i class="disk outline middle aligned icon"></i>
+			<div class="content">
+			  Memory Usage: 0%
+			</div>
+			</div>
+			<div class="item">
+			<i class="tasks middle aligned icon"></i>
+			<div class="content">
+			  Running Processes: {{processList.length}}
+			</div>
+			</div>
+		</div>
+		</div>
+		</div>
+		<div class="six wide column">
+		<div class="ui olive segment">
+		<div class="ui tiny header"><i class="bar chart icon"></i>Container Statistics</div>
+		<div class="ui relaxed divided list">
+			<div class="item">
+			<i class="calendar middle aligned icon"></i>
+			<div class="content">
+			  Created On: {{formatDate createdAt}}
+			</div>
+			</div>
+			<div class="item">
+			<i class="wait middle aligned icon"></i>
+			<div class="content">
+			  Instance Running Time: 0
+			</div>
+			</div>
+			<div class="item">
+			<i class="history middle aligned icon"></i>
+			<div class="content">
+			  Total Running Time: 0
+			</div>
+			</div>
+			<div class="item">
+			<i class="heartbeat middle aligned icon"></i>
+			<div class="content">
+			  Average CPU Usage: 0%
+			</div>
+			</div>
+			<div class="item">
+			<i class="disk outline middle aligned icon"></i>
+			<div class="content">
+			  Average Memory Usage: 0%
+			</div>
+			</div>
+		</div>
+		</div>
+		</div>
+	</div>
+	<div class="sixteen wide column">
+	<div class="ui blue segment">
+	<div class="ui tiny header"><i class="tasks icon"></i>Running Processes</div>
+	<table class="ui celled table">
+	<thead>
+    <tr>
+      <th>Name</th>
+      <th>User</th>
+      <th>PID</th>
+      <th>Start Time</th>
+      <th>Run Time</th>
+    </tr>
+  	</thead>
+  	<tbody>
+    {{#if Template.subscriptionsReady}}
+	{{#each processList}}
+	<tr>
+        <td>{{name}}</td>
+        <td>{{user}}</td>
+        <td>{{pid}}</td>
+        <td>{{stime}}</td>
+        <td>{{time}}</td>
+    </tr>
+    {{/each}}
+    {{else}}
+    <tr><td>Loading...</td></tr>
+    {{/if}}
+    </tbody>
+    </table>
 	</div>
 	</div>
 	<div class="eight wide column">
-	<div class="ui teal segment">
-	<div class="ui tiny header"><i class="browser icon"></i>Running Processes</div>
-	<p>Nothing to show.</p>
-	</div>
-	</div>
-	<div class="four wide column">
-	<div class="ui blue segment">
-	<div class="ui tiny header"><i class="dashboard icon"></i>Controls</div>
-	<div class="ui vertical basic buttons">
-	  <button class="ui labeled icon button">
-	    <i class="icon"></i><i class="loading circle notched icon" style="background: none"></i>Start Container
-	  </button>
-	  <button class="ui labeled icon disabled button">
-	    <i class="repeat icon"></i>Restart Container
-	  </button>
-	  <button class="ui labeled icon disabled button">
-	    <i class="pause icon"></i>Pause Container
-	  </button>
-	</div>
-	</div>
-	</div>
-	<div class="twelve wide column">
-	<div class="ui olive segment">
-	<div class="ui tiny header"><i class="code icon"></i>Code Configuration</div>
+	<div class="ui orange segment">
+	<div class="ui tiny header"><i class="heartbeat icon"></i>CPU Usage Graph</div>
 	<p>Not available yet.</p>
 	</div>
+	</div>
+	<div class="eight wide column">
+	<div class="ui violet segment">
+	<div class="ui tiny header"><i class="disk outline icon"></i>Memory Usage Graph</div>
+	<p>Not available yet.</p>
+	</div>
+	</div>
+	<div class="stretched row">
+		<div class="eight wide column">
+		<div class="ui yellow segment">
+		<div class="ui tiny header"><i class="code icon"></i>Package Configuration</div>
+		<div class="ui relaxed divided list">
+		{{#each urlList}}
+		<div class="item">
+	    <div class="right floated content">
+	      <i class="close icon" style="cursor: pointer"></i>
+	    </div>
+		<i class="large github middle aligned icon"></i>
+	    <div class="content">
+	      <a href="{{url}}" target="_blank" class="header">{{repoName url}}</a>
+	      <div class="description">{{url}}</div>
+	    </div>
+	    </div>
+	    {{/each}}
+		</div>
+	    <div class="ui form">
+	    <form>
+			<div class="field">
+	        <div class="ui action input"><input type="text" placeholder="Repository URL" name="url"><button class="ui button" type="submit">Add Package</button></div>
+	        </div>
+	    </form>
+	    </div>
+		</div>
+		</div>
+		<div class="eight wide column">
+		<div class="ui green segment">
+		<div class="ui tiny header"><i class="book icon"></i>Message Log</div>
+		<div class="ui relaxed divided list">
+		{{#each messageList}}
+		<div class="item">
+		<i class="large info circle middle aligned icon"></i>
+	    <div class="content">
+	      <div class="header">{{value}}</div>
+	      <div class="description">{{stamp}}</div>
+	    </div>
+	    </div>
+	    {{/each}}
+		</div>
+		</div>
+		</div>
 	</div>
 	</div>
 </template>

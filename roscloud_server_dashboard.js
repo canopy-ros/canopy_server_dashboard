@@ -1,4 +1,8 @@
 var redisCollection = new Meteor.RedisCollection("redis");
+Containers = new Mongo.Collection("containers");
+URLs = new Mongo.Collection("urls");
+Messages =  new Mongo.Collection("messages");
+
 Router.configure({
   layoutTemplate: 'main'
 });
@@ -60,6 +64,26 @@ Router.route('/containers', {
         }
     }
 });
+Router.route('/containers/:name', {
+    name: 'container',
+    template: 'container',
+    data: function(){
+        var currentCont = this.params.name;
+        var currentUser = Meteor.userId();
+        var res = Containers.findOne({ name: currentCont, user: currentUser });
+        if (typeof res === 'undefined')
+        	Router.go("containers");
+        return res;
+    },
+    onBeforeAction: function() {
+        var currentUser = Meteor.userId();
+        if (currentUser) {
+            this.next();
+        } else {
+            Router.go("login");
+        }
+    }
+});
 Router.route('/settings', {
     name: 'settings',
     template: 'settings',
@@ -79,14 +103,41 @@ Router.route('/settings', {
 
 if (Meteor.isClient) {
 	Meteor.subscribe("clients");
-	var key_prefix = "clients:/MIICXAIBAAKBgQCTUQ49FJUCVvU5tIag/";
+	Meteor.subscribe("redis_containers");
+	Meteor.subscribe("containers");
+	Meteor.subscribe("container_urls");
+	Meteor.subscribe("messages");
+	var key_prefix = "clients:/" + Meteor.userId() + "/";
+	var container_prefix = "containers:" + Meteor.userId() + "_";
 	Template.home.helpers({
 	  username: function() {
 	    return Meteor.user().username;
 	  },
 	  user_id: function() {
 	  	return Meteor.userId();
-	  }
+	  },
+	  'containerList': function() {
+	    var currentUser = Meteor.userId();
+	    return Containers.find({user: currentUser});
+    },
+    'messageList': function() {
+	    var currentUser = Meteor.userId();
+    	return Messages.find({user: currentUser}, {sort: {stamp: -1}, limit: 4});
+    },
+    'formatMessageItem': function(item) {
+    	var split = item.split(":");
+    	if (split[0] == "container")
+    	{
+    		return split[1];
+    	}
+    },
+    'messageIcon': function(item) {
+    	var split = item.split(":");
+    	if (split[0] == "container")
+    	{
+    		return "cloud";
+    	}
+    }
 	});
   Template.main.events({
     'click .logout': function(event){
@@ -131,6 +182,147 @@ if (Meteor.isClient) {
   		return Meteor.userId();
   	}
   });
+  Template.containers.helpers({
+  	'containerList': function() {
+	    var currentUser = Meteor.userId();
+	    return Containers.find({user: currentUser});
+    }
+  });
+  Template.container.helpers({
+  	'urlList': function() {
+	    var currentUser = Meteor.userId();
+	    return URLs.find({user: currentUser, container: this.name});
+    },
+    'processList': function() {
+    	return JSON.parse(redisCollection.matching(container_prefix + this.name + ":processes").fetch()[0].value);
+    },
+    'messageList': function() {
+	    var currentUser = Meteor.userId();
+    	return Messages.find({user: currentUser, item: "container:" + this.name}, {sort: {stamp: -1}, limit: 3});
+    },
+    'startButtonText': function() {
+			if (this.status == 'stopped')
+				return "Start Container";
+			else if (this.status == 'running')
+				return "Stop Container";
+    },
+    'controlButtonDisabled': function() {
+    	if (this.status == 'running')
+    		return '';
+    	else
+    		return 'disabled';
+    }
+  });
+  Template.container.events({
+		'submit form': function(event) {
+		  event.preventDefault();
+		  var url = $('[name="url"]').val();
+		  if (url == "")
+		  	return;
+		  var currentUser = Meteor.userId();
+		  URLs.insert({
+		      url: url,
+		      user: currentUser,
+		      container: this.name
+		  }, function(error){
+    		console.log(error);
+			});
+		  $('[name="url"]').val('');
+		},
+		'click .close': function(event){
+    	event.preventDefault();
+		  var urlID = this._id;
+		  URLs.remove({_id: urlID});
+		},
+		'click .start': function(event){
+			event.preventDefault();
+			if (this.status == 'running')
+			{
+				redisCollection.set(container_prefix + this.name + ":status", "stopped");
+				Containers.update(this._id, {
+	        $set: {status: 'stopped'}
+	      });
+			  var currentUser = Meteor.userId();
+			  Messages.insert({
+			      item: "container:" + this.name,
+			      user: currentUser,
+			      value: 'Container stopped.',
+	        	stamp: new Date()
+			  }, function(error){
+	    		console.log(error);
+				});
+			}
+			else
+			{
+				redisCollection.set(container_prefix + this.name + ":status", "running");
+				Containers.update(this._id, {
+	        $set: {status: 'running'}
+	      });
+			  var currentUser = Meteor.userId();
+			  Messages.insert({
+			      item: "container:" + this.name,
+			      user: currentUser,
+			      value: 'Container started.',
+	        	stamp: new Date()
+			  }, function(error){
+	    		console.log(error);
+				});
+			}
+		}
+  });
+  Template.containers.events({
+		'submit form': function(event) {
+		  event.preventDefault();
+		  var name = $('[name="containerName"]').val().replace(" ", "_");
+		  if (name == "")
+		  	return;
+		  var currentUser = Meteor.userId();
+		  Containers.insert({
+		      name: name,
+		      user: currentUser,
+		      status: 'stopped',
+        	createdAt: new Date()
+		  }, function(error){
+    		console.log(error);
+			});
+			redisCollection.set(container_prefix + name + ":status", "stopped");
+			redisCollection.set(container_prefix + name + ":processes", "[]");
+		  $('[name="containerName"]').val('');
+		},
+		'click .deleteContainer': function(event){
+    	event.preventDefault();
+	    var confirm = window.confirm("Delete this container?");
+	    if(confirm){
+			  var id = this._id;
+			  var doc = URLs.findOne({ container: this.name });
+			  if (typeof doc !== 'undefined')
+			  	URLs.remove({_id: doc._id});
+				redisCollection.del(container_prefix + this.name + ":status");
+				redisCollection.del(container_prefix + this.name + ":processes");
+			  Containers.remove({_id: id});
+	    }
+		}
+  });
+  Template.registerHelper("repoName", function(url) {
+  	var split = url.split("/");
+  	return split[split.length - 2] + "/" + split[split.length - 1];
+  });
+  Template.registerHelper("formatDate", function(timestamp) {
+  	var monthNames = [
+		  "January", "February", "March",
+		  "April", "May", "June", "July",
+		  "August", "September", "October",
+		  "November", "December"
+		];
+  	var date = new Date(timestamp);
+  	var hours = date.getHours();
+  	var minutes = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+  	var seconds = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
+  	var day = date.getDate();
+		var monthIndex = date.getMonth();
+		var year = date.getFullYear();
+    return day + ' ' + monthNames[monthIndex] + ' ' + year + ' ' + hours + ':' + minutes + ':' + seconds;
+	});
 	Template.robots.onRendered(function() {
 		var visnodes = Array();
 		var visedges = Array();
@@ -575,8 +767,22 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
+	Containers._ensureIndex({name: 1, user: 1}, {unique: 1});
 	Meteor.publish("clients", function () {
 		console.log(this.userId);
-	  return redisCollection.matching("clients:/MIICXAIBAAKBgQCTUQ49FJUCVvU5tIag/*");
+	  return redisCollection.matching("clients:/" + this.userId + "/*");
+	});
+	Meteor.publish("redis_containers", function () {
+		console.log(this.userId);
+	  return redisCollection.matching("containers:" + this.userId + "_*:*");
+	});
+	Meteor.publish("containers", function() {
+	  return Containers.find({user: this.userId});
+	});
+	Meteor.publish("container_urls", function() {
+	  return URLs.find({user: this.userId});
+	});
+	Meteor.publish("messages", function() {
+	  return Messages.find({user: this.userId});
 	});
 }
