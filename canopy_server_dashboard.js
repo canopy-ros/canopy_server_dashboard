@@ -48,9 +48,9 @@ Router.route('/robots', {
         }
     }
 });
-Router.route('/containers', {
-    name: 'containers',
-    template: 'containers',
+Router.route('/leaflets', {
+    name: 'leaflets',
+    template: 'leaflets',
     data: function(){
         var currentUser = Meteor.userId();
         return currentUser;
@@ -64,15 +64,15 @@ Router.route('/containers', {
         }
     }
 });
-Router.route('/containers/:name', {
-    name: 'container',
-    template: 'container',
+Router.route('/leaflets/:name', {
+    name: 'leaflet',
+    template: 'leaflet',
     data: function(){
         var currentCont = this.params.name;
         var currentUser = Meteor.userId();
         var res = Containers.findOne({ name: currentCont, user: currentUser });
         if (typeof res === 'undefined')
-        	Router.go("containers");
+        	Router.go("leaflets");
         return res;
     },
     onBeforeAction: function() {
@@ -107,8 +107,12 @@ if (Meteor.isClient) {
 	Meteor.subscribe("containers");
 	Meteor.subscribe("container_urls");
 	Meteor.subscribe("messages");
-	var key_prefix = "clients:/" + Meteor.userId() + "/";
-	var container_prefix = "containers:" + Meteor.userId() + "_";
+	function clientPrefix() {
+		return "clients:/" + Meteor.userId() + "/";
+	}
+	function containerPrefix() {
+		return "containers:" + Meteor.userId() + "_";
+	}
 	Template.home.helpers({
 	  username: function() {
 	    return Meteor.user().username;
@@ -135,7 +139,7 @@ if (Meteor.isClient) {
     	var split = item.split(":");
     	if (split[0] == "container")
     	{
-    		return "cloud";
+    		return "leaf";
     	}
     }
 	});
@@ -182,19 +186,19 @@ if (Meteor.isClient) {
   		return Meteor.userId();
   	}
   });
-  Template.containers.helpers({
+  Template.leaflets.helpers({
   	'containerList': function() {
 	    var currentUser = Meteor.userId();
 	    return Containers.find({user: currentUser});
     }
   });
-  Template.container.helpers({
+  Template.leaflet.helpers({
   	'urlList': function() {
 	    var currentUser = Meteor.userId();
 	    return URLs.find({user: currentUser, container: this.name});
     },
     'processList': function() {
-    	return JSON.parse(redisCollection.matching(container_prefix + this.name + ":processes").fetch()[0].value);
+    	return JSON.parse(redisCollection.matching(containerPrefix() + this.name + ":processes").fetch()[0].value);
     },
     'messageList': function() {
 	    var currentUser = Meteor.userId();
@@ -202,18 +206,24 @@ if (Meteor.isClient) {
     },
     'startButtonText': function() {
 			if (this.status == 'stopped')
-				return "Start Container";
+				return "Start Leaflet";
 			else if (this.status == 'running')
-				return "Stop Container";
+				return "Stop Leaflet";
     },
     'controlButtonDisabled': function() {
     	if (this.status == 'running')
     		return '';
     	else
     		return 'disabled';
+    },
+    'messageIcon': function(value) {
+    	if (value.indexOf("created") > -1)
+    		return "plus";
+    	if (value.indexOf("stopped") > -1 || value.indexOf("started") > -1)
+    		return "power";
     }
   });
-  Template.container.events({
+  Template.leaflet.events({
 		'submit form': function(event) {
 		  event.preventDefault();
 		  var url = $('[name="url"]').val();
@@ -238,7 +248,7 @@ if (Meteor.isClient) {
 			event.preventDefault();
 			if (this.status == 'running')
 			{
-				redisCollection.set(container_prefix + this.name + ":status", "stopped");
+				redisCollection.set(containerPrefix() + this.name + ":status", "stopped");
 				Containers.update(this._id, {
 	        $set: {status: 'stopped'}
 	      });
@@ -246,7 +256,7 @@ if (Meteor.isClient) {
 			  Messages.insert({
 			      item: "container:" + this.name,
 			      user: currentUser,
-			      value: 'Container stopped.',
+			      value: 'Leaflet stopped.',
 	        	stamp: new Date()
 			  }, function(error){
 	    		console.log(error);
@@ -254,7 +264,7 @@ if (Meteor.isClient) {
 			}
 			else
 			{
-				redisCollection.set(container_prefix + this.name + ":status", "running");
+				redisCollection.set(containerPrefix() + this.name + ":status", "running");
 				Containers.update(this._id, {
 	        $set: {status: 'running'}
 	      });
@@ -262,7 +272,7 @@ if (Meteor.isClient) {
 			  Messages.insert({
 			      item: "container:" + this.name,
 			      user: currentUser,
-			      value: 'Container started.',
+			      value: 'Leaflet started.',
 	        	stamp: new Date()
 			  }, function(error){
 	    		console.log(error);
@@ -270,7 +280,7 @@ if (Meteor.isClient) {
 			}
 		}
   });
-  Template.containers.events({
+  Template.leaflets.events({
 		'submit form': function(event) {
 		  event.preventDefault();
 		  var name = $('[name="containerName"]').val().replace(" ", "_");
@@ -285,20 +295,32 @@ if (Meteor.isClient) {
 		  }, function(error){
     		console.log(error);
 			});
-			redisCollection.set(container_prefix + name + ":status", "stopped");
-			redisCollection.set(container_prefix + name + ":processes", "[]");
+		  Messages.insert({
+		      item: "container:" + name,
+		      user: currentUser,
+		      value: 'Leaflet created.',
+        	stamp: new Date()
+		  }, function(error){
+    		console.log(error);
+			});
+			redisCollection.set(containerPrefix() + name + ":status", "stopped");
+			redisCollection.set(containerPrefix() + name + ":processes", "[]");
 		  $('[name="containerName"]').val('');
 		},
 		'click .deleteContainer': function(event){
     	event.preventDefault();
-	    var confirm = window.confirm("Delete this container?");
+	    var confirm = window.confirm("Delete this leaflet?");
 	    if(confirm){
 			  var id = this._id;
 			  var doc = URLs.findOne({ container: this.name });
 			  if (typeof doc !== 'undefined')
 			  	URLs.remove({_id: doc._id});
-				redisCollection.del(container_prefix + this.name + ":status");
-				redisCollection.del(container_prefix + this.name + ":processes");
+			  doc = Messages.find({ item: "container:" + this.name }).fetch();
+			  for (d in doc) {
+			  	Messages.remove({_id: doc[d]._id});
+			  }
+				redisCollection.del(containerPrefix() + this.name + ":status");
+				redisCollection.del(containerPrefix() + this.name + ":processes");
 			  Containers.remove({_id: id});
 	    }
 		}
@@ -328,13 +350,13 @@ if (Meteor.isClient) {
 		var visedges = Array();
 		var nodeMap = {};
 		var robot_nodes = redisCollection.matching(
-			key_prefix + "*/receiving:name").fetch();
+			clientPrefix() + "*/receiving:name").fetch();
 		for (var i = 0; i < robot_nodes.length; i++)
 		{
 			var split = robot_nodes[i].key.split(":");
 			name = robot_nodes[i].value;
 			nodeMap[split[1]] =  name;
-			var description = redisCollection.matching(key_prefix + name
+			var description = redisCollection.matching(clientPrefix() + name
           	+ "/receiving:description").fetch();
 			visnodes.push({
           id: name,
@@ -344,7 +366,7 @@ if (Meteor.isClient) {
           title: (description.length == 1 ? description[0].value : ""),
       });
 			var topic_nodes = redisCollection.matching(
-				key_prefix + name + "/*:topic").fetch();
+				clientPrefix() + name + "/*:topic").fetch();
 			for (var j = 0; j < topic_nodes.length; j++)
 			{
 				var topic_split = topic_nodes[j].key.split(":");
@@ -353,7 +375,7 @@ if (Meteor.isClient) {
 				nodeMap[topic_split[1]]["from"] = name;
 				if (topic_nodes[j].value.endsWith("/description"))
 					continue;
-				var type = redisCollection.matching(key_prefix + topic_nodes[j].value.substring(1)
+				var type = redisCollection.matching(clientPrefix() + topic_nodes[j].value.substring(1)
 	          	+ ":type").fetch()
 				visnodes.push({
 	          id: topic_nodes[j].value,
@@ -366,7 +388,7 @@ if (Meteor.isClient) {
 	          group: name,
 	          title: (type.length == 1 ? type[0].value : ""),
 	      });
-	      var freq = redisCollection.matching(key_prefix + topic_nodes[j].value.substring(1)
+	      var freq = redisCollection.matching(clientPrefix() + topic_nodes[j].value.substring(1)
 	          	+ ":freq").fetch();
 	      visedges.push({
             id: name + " " + topic_nodes[j].value,
@@ -384,14 +406,14 @@ if (Meteor.isClient) {
             label: (freq.length == 1 ? parseFloat(freq[0].value).toFixed(2) : 0.0) + " Hz",
             group: name,
          });
-				var rcv_nodes = redisCollection.matching(key_prefix + topic_nodes[j].value.substring(1)
+				var rcv_nodes = redisCollection.matching(clientPrefix() + topic_nodes[j].value.substring(1)
 					+ ":to").fetch();
 				if (rcv_nodes.length == 1)
 				{
 					receivers = rcv_nodes[0].value.split(" ");
 					for (var k = 0; k < receivers.length; k++)
 					{
-						var rcv_freq = redisCollection.matching(key_prefix + receivers[k]
+						var rcv_freq = redisCollection.matching(clientPrefix() + receivers[k]
 			          	+ "/receiving:freq:" + topic_nodes[j].value).fetch();
 			      visedges.push({
 		            id: topic_nodes[j].value + " " + receivers[k],
@@ -433,12 +455,12 @@ if (Meteor.isClient) {
 		var network = new vis.Network(container, data, options);
 
 		redisCollection.matching(
-			key_prefix + "*/receiving:name").observe({
+			clientPrefix() + "*/receiving:name").observe({
 				added: function(item) {
 					var split = item._id.split(":");
 					name = item.value;
 					nodeMap[split[1]] = name;
-					var description = redisCollection.matching(key_prefix + name
+					var description = redisCollection.matching(clientPrefix() + name
 		          	+ "/receiving:description").fetch();
 					nodes.add({
 		          id: name,
@@ -456,7 +478,7 @@ if (Meteor.isClient) {
 				}
 			});
 		redisCollection.matching(
-				key_prefix + "*:topic").observe({
+				clientPrefix() + "*:topic").observe({
 					added: function(item) {
 						if (item.value.endsWith("/description"))
 							return;
@@ -465,7 +487,7 @@ if (Meteor.isClient) {
 						nodeMap[split[1]] = {};
 						nodeMap[split[1]]["name"] = item.value;
 						nodeMap[split[1]]["from"] = name;
-						var type = redisCollection.matching(key_prefix + item.value.substring(1)
+						var type = redisCollection.matching(clientPrefix() + item.value.substring(1)
 			        + ":type").fetch();
 						nodes.add({
 			          id: item.value,
@@ -478,7 +500,7 @@ if (Meteor.isClient) {
 			          group: name,
 			          title: (type.length == 1 ? type[0].value : ""),
 			      });
-			      var freq = redisCollection.matching(key_prefix + item.value.substring(1)
+			      var freq = redisCollection.matching(clientPrefix() + item.value.substring(1)
 			        + ":freq").fetch();
 			      edges.add({
 		            id: name + " " + item.value,
@@ -504,7 +526,7 @@ if (Meteor.isClient) {
 		    	}
 		   });
 		redisCollection.matching(
-			key_prefix + "*/receiving:description").observe({
+			clientPrefix() + "*/receiving:description").observe({
 				added: function(item) {
 					var split = item._id.split(":");
 					if (typeof nodeMap[split[1]] === 'undefined') {
@@ -517,7 +539,7 @@ if (Meteor.isClient) {
 				}
 			});
 		redisCollection.matching(
-			key_prefix + "*:type").observe({
+			clientPrefix() + "*:type").observe({
 				added: function(item) {
 					var split = item._id.split(":");
 					if (typeof nodeMap[split[1]] === 'undefined') {
@@ -530,7 +552,7 @@ if (Meteor.isClient) {
 				}
 			});
 		redisCollection.matching(
-			key_prefix + "*/receiving:freq:*").observe({
+			clientPrefix() + "*/receiving:freq:*").observe({
 				added: function(item) {
 					var split = item._id.split(":");
 					if (typeof nodeMap[split[1]] === 'undefined'){
@@ -550,7 +572,7 @@ if (Meteor.isClient) {
 				}
 			});
 		redisCollection.matching(
-			key_prefix + "*:freq").observe({
+			clientPrefix() + "*:freq").observe({
 				added: function(item) {
 					var split = item._id.split(":");
 					if (typeof nodeMap[split[1]] === 'undefined'){
@@ -578,7 +600,7 @@ if (Meteor.isClient) {
 				}
 			});
 		redisCollection.matching(
-			key_prefix + "*:to").observe({
+			clientPrefix() + "*:to").observe({
 				added: function(item) {
 					var split = item._id.split(":");
 					if (typeof nodeMap[split[1]] === 'undefined'){
@@ -590,7 +612,7 @@ if (Meteor.isClient) {
 					var to_split = item.value.split(" ");
 					for (var i = 0; i < to_split.length; i++)
 					{
-						var rcv_freq = redisCollection.matching(key_prefix + to_split[i]
+						var rcv_freq = redisCollection.matching(clientPrefix() + to_split[i]
 		          	+ "/receiving:freq:" + nodeMap[split[1]]["name"]).fetch();
 						edges.add({
 	            id: nodeMap[split[1]]["name"] + " " + to_split[i],
@@ -646,7 +668,7 @@ if (Meteor.isClient) {
 						}));
 						if (!exists)
 						{
-							var rcv_freq = redisCollection.matching(key_prefix + to_split[i]
+							var rcv_freq = redisCollection.matching(clientPrefix() + to_split[i]
 			          	+ "/receiving:freq:" + nodeMap[split[1]]["name"]).fetch();
 							addEdges.push({
 		            id: nodeMap[split[1]]["name"] + " " + to_split[i],

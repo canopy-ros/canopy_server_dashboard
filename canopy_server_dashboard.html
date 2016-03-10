@@ -27,8 +27,8 @@
 	<div class="ui divider" style="margin: 0"></div>
 	<div class="ui attached large secondary inverted pointing menu">
 		<a href="{{pathFor route='home'}}" class="{{ activeIfTemplateIs 'home' }} item"><i class="home icon"></i>Overview</a>
-			<a href="{{pathFor route='robots'}}" class="{{ activeIfTemplateIs 'robots' }} item"><i class="dashboard icon"></i>Robots</a>
-			<a href="{{pathFor route='containers'}}" class="{{ activeIfTemplateIs 'containers' }}{{ activeIfTemplateIs 'container' }} item"><i class="cloud icon"></i>Containers</a>
+			<a href="{{pathFor route='robots'}}" class="{{ activeIfTemplateIs 'robots' }} item"><i class="setting icon"></i>Robots</a>
+			<a href="{{pathFor route='leaflets'}}" class="{{ activeIfTemplateIs 'leaflets' }}{{ activeIfTemplateIs 'leaflet' }} item"><i class="cloud icon"></i>Leaflets</a>
 	</div>
 	</div>
 	</div>
@@ -65,13 +65,13 @@
 		<div class="stretched row">
 		<div class="six wide column">
 		<div class="ui olive segment">
-		<div class="ui tiny header"><i class="cloud icon"></i>Container Statuses</div>
+		<div class="ui tiny header"><i class="cloud icon"></i>Leaflet Statuses</div>
 		<div class="ui relaxed divided list">
 		{{#each containerList}}
 			<div class="item">
-			<i class="power middle aligned icon"></i>
+			<i class="leaf middle aligned icon"></i>
 			<div class="content">
-			<a href="{{pathFor route='container'}}">{{name}}</a>: {{status}}
+			<a href="{{pathFor route='leaflet'}}">{{name}}</a>: {{status}}
 			</div>
 			</div>
    		{{/each}}
@@ -107,11 +107,11 @@
 	</div>
 	</div>
 </template>
-<template name="containers">
+<template name="leaflets">
 	<div class="ui grid">
 	<div class="sixteen wide column">
 	<div class="ui green segment">
-	<div class="ui tiny header"><i class="list icon"></i>Container List</div>
+	<div class="ui tiny header"><i class="list icon"></i>Leaflet List</div>
 	<table class="ui celled table">
 	<thead>
     <tr>
@@ -128,7 +128,7 @@
         <td>{{name}}</td>
         <td>{{status}}</td>
         <td>{{formatDate createdAt}}</td>
-        <td><a href="{{pathFor route='container'}}">Configure</a> | <a href="#" class="deleteContainer" style="color: #f00">Delete</a></td>
+        <td><a href="{{pathFor route='leaflet'}}">Configure</a> | <a href="#" class="deleteContainer" style="color: #f00">Delete</a></td>
     </tr>
     {{/each}}
     {{else}}
@@ -139,7 +139,7 @@
     <div class="ui form">
     <form>
 		<div class="field">
-        <div class="ui left action input"><button class="ui button" type="submit">New Container</button><input type="text" placeholder="Container Name" name="containerName"></div>
+        <div class="ui left action input"><button class="ui button" type="submit">New Leaflet</button><input type="text" placeholder="Leaflet Name" name="containerName"></div>
         </div>
     </form>
     </div>
@@ -147,7 +147,8 @@
 	</div>
 	</div>
 </template>
-<template name="container">
+<template name="leaflet">
+<h2 style="margin-bottom: 20px" class="ui header"><i class="leaf icon" style="font-size: 1.2em; color: green; margin-right: 10px"></i><div class="content">{{name}}</div></h2>
 	<div class="ui grid">
   	<div class="stretched row">
 		<div class="four wide column">
@@ -158,24 +159,18 @@
 		    <i class="power icon"></i><!--<i class="loading spinner icon" style="background: none"></i>-->{{startButtonText}}
 		  </button>
 		  <button class="ui labeled icon {{controlButtonDisabled}} button">
-		    <i class="repeat icon"></i>Restart Container
+		    <i class="repeat icon"></i>Restart Leaflet
 		  </button>
 		  <button class="ui labeled icon {{controlButtonDisabled}} button">
-		    <i class="pause icon"></i>Pause Container
+		    <i class="pause icon"></i>Pause Leaflet
 		  </button>
 		</div>
 		</div>
 		</div>
 		<div class="six wide column">
 		<div class="ui green segment">
-		<div class="ui tiny header"><i class="setting icon"></i>Container Status</div>
+		<div class="ui tiny header"><i class="setting icon"></i>Leaflet Status</div>
 		<div class="ui relaxed divided list">
-			<div class="item">
-			<i class="tag middle aligned icon"></i>
-			<div class="content">
-			  Name: {{name}}
-			</div>
-			</div>
 			<div class="item">
 			<i class="power middle aligned icon"></i>
 			<div class="content">
@@ -205,7 +200,7 @@
 		</div>
 		<div class="six wide column">
 		<div class="ui olive segment">
-		<div class="ui tiny header"><i class="bar chart icon"></i>Container Statistics</div>
+		<div class="ui tiny header"><i class="bar chart icon"></i>Leaflet Statistics</div>
 		<div class="ui relaxed divided list">
 			<div class="item">
 			<i class="calendar middle aligned icon"></i>
@@ -216,13 +211,7 @@
 			<div class="item">
 			<i class="wait middle aligned icon"></i>
 			<div class="content">
-			  Instance Running Time: 0
-			</div>
-			</div>
-			<div class="item">
-			<i class="history middle aligned icon"></i>
-			<div class="content">
-			  Total Running Time: 0
+			  Uptime: 0
 			</div>
 			</div>
 			<div class="item">
@@ -313,11 +302,11 @@
 		</div>
 		<div class="eight wide column">
 		<div class="ui green segment">
-		<div class="ui tiny header"><i class="book icon"></i>Message Log</div>
+		<div class="ui tiny header"><i class="history icon"></i>Leaflet History</div>
 		<div class="ui relaxed divided list">
 		{{#each messageList}}
 		<div class="item">
-		<i class="large info circle middle aligned icon"></i>
+		<i class="large {{messageIcon value}} middle aligned icon"></i>
 	    <div class="content">
 	      <div class="header">{{value}}</div>
 	      <div class="description">{{stamp}}</div>
@@ -337,11 +326,12 @@
 	</div>
 </template>
 <template name="register">
-	<div id="content">
-	<div class="ui middle aligned grid child">
+	<div id="content" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto; height: 400px">
+	<div class="ui middle aligned grid">
     <div class="column">
         <div class="ui center aligned page grid">
-            <div class="eight wide  column">
+            <div class="eight wide column">
+  			<h2 class="ui middle aligned header"><img class="ui image" src="/logo.png" style="height: 2.5em; width: auto; margin: 0"></h2>
                 <div class="ui left aligned segment">
                     <h3 class="ui dividing header">Register <span style="color: #bbb">// <a href="{{pathFor route='login'}}">Login</a></span></h3>
                     <div class="ui form">
@@ -363,11 +353,12 @@
     </div>
 </template>
 <template name="login">
-	<div id="content">
-	<div class="ui middle aligned grid child">
+	<div id="content" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto; height: 400px">
+	<div class="ui middle aligned grid">
     <div class="column">
         <div class="ui center aligned page grid">
-            <div class="eight wide  column">
+            <div class="eight wide column">
+  			<h2 class="ui middle aligned header"><img class="ui image" src="/logo.png" style="height: 2.5em; width: auto; margin: 0"></h2>
                 <div class="ui left aligned segment">
                     <h3 class="ui dividing header">Login <span style="color: #bbb">// <a href="{{pathFor route='register'}}">Register</a></span></h3>
                     <div class="ui form">
